@@ -21,7 +21,6 @@ def get_version(verbose=1, filename='quantumdataset/version.py'):
     return version
 
 
-
 setup(name='quantum_dataset',
       version=get_version(),
       use_2to3=False,
@@ -48,5 +47,3 @@ setup(name='quantum_dataset',
       tests_require=['pytest'],
       zip_safe=False,
       )
-
-
