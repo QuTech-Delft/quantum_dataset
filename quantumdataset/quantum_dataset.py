@@ -26,8 +26,6 @@ from io import BytesIO
 from urllib.request import urlopen
 from zipfile import ZipFile
 
-
-
     
 def install_quantum_dataset(location, overwrite=False):
     qdfile = os.path.join(location, 'quantumdataset.txt')

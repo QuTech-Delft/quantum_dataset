@@ -10,6 +10,7 @@ from qtt.algorithms.tunneling import fit_pol_all, polmod_all_2slopes, plot_polar
 import scipy.constants
 from qtt.data import default_setpoint_array
 from qtt.algorithms.random_telegraph_signal import tunnelrates_RTS, fit_double_gaussian, _plot_rts_histogram
+import qtt.algorithms.allxy
 
 def _parse_1d_dataset(dataset):
     y_data = np.array(dataset.default_parameter_array())
@@ -28,6 +29,11 @@ def analyse_pinchoff(dataset : DataSet, fig : int) -> dict:
     plt.legend()
     return result
 
+
+def analyse_allxy(dataset : DataSet, fig : int) -> dict:
+    result = qtt.algorithms.allxy.fit_allxy(dataset)
+    qtt.algorithms.allxy.plot_allxy(dataset, result, fig=fig)
+    return result
 
 def analyse_time_rabi(dataset : DataSet, fig : int) -> dict:
     x_data, y_data = _parse_1d_dataset(dataset)

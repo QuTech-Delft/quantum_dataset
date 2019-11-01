@@ -10,7 +10,6 @@ matrix:
     - xvfb
 
 install:
-    - pip install -r requirements.txt
     - pip install coveralls mypy
     - pip install -e .
     - export QT_QPA_PLATFORM=offscreen
