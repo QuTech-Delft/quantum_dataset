@@ -9,7 +9,7 @@
 
 import os
 import distutils.version
-
+from typing import Optional, List
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -27,6 +27,8 @@ from urllib.request import urlopen
 from zipfile import ZipFile
 
 
+
+    
 def install_quantum_dataset(location, overwrite=False):
     qdfile = os.path.join(location, 'quantumdataset.txt')
     if os.path.exists(qdfile) and not overwrite:
@@ -42,8 +44,8 @@ def install_quantum_dataset(location, overwrite=False):
 
 class QuantumDataset():
 
-    def __init__(self, datadir, tags=None):
-        """ Create object to load and store datasets
+    def __init__(self, datadir : str , tags : Optional[List[str]]=None):
+        """ Create object to load and store quantum datasets
 
         Args:
             datadir (str): directory with stored results
@@ -53,6 +55,10 @@ class QuantumDataset():
         self._minimal_version = '0.1.2'
         self._test_datadir = datadir
         self._datafile_extensions = ['.json']
+        
+        if self.check_quantum_dataset_installation(datadir) is None:        
+            install_quantum_dataset(location=datadir)
+
         if tags is None:
             tags = os.listdir(datadir)
             tags = [tag for tag in tags if '.' not in tag]
@@ -61,14 +67,26 @@ class QuantumDataset():
             sdir = os.path.join(self._test_datadir, subdir)
             qtt.utilities.tools.mkdirc(sdir)
 
-    def _check_data(self):
-        """ Check whether the required data is present """
+    @staticmethod
+    def check_quantum_dataset_installation(location : str) -> Optional[str]:
+        """  Return version of the Quantum DataSet installed 
+        
+        Returns None if no data is installed
+        """ 
+        qdfile = os.path.join(location, 'quantumdataset.txt')
+        if not os.path.exists(qdfile):
+            return None
         try:
-            with open(os.path.join(self._test_datadir, 'quantumdataset.txt'), 'rt') as fid:
+            with open(os.path.join(location, 'quantumdataset.txt'), 'rt') as fid:
                 version = fid.readline().strip()
         except Exception as ex:
-            raise Exception('could not find data for QuantumDataset at location %s' % self._test_datadir) from ex
-        if not distutils.version.StrictVersion(self._version) <= distutils.version.StrictVersion(version):
+            raise Exception('could not correct data for QuantumDataset at location %s' % location) from ex
+        return version
+    
+    def _check_data(self):
+        """ Check whether the required data is present """
+        version = self.check_quantum_dataset_installation(self._test_datadir)
+        if not distutils.version.StrictVersion(self._minimal_version) <= distutils.version.StrictVersion(version):
             raise Exception('version of data %s is older than version required %s' % (version, self._minimal_version))
 
     def generate_save_function(self, tag):
@@ -216,10 +234,13 @@ class QuantumDataset():
 
     def _generate_main_page(self, htmldir):
         """ Generate overview page with results """
+        
+        header_css='<style type="text/css">\n p { font-family: Verdana, Geneva, sans-serif; }\n </style>\n'
+        
         page = markup.page()
         page.init(title="Quantum Dataset",
                   lang='en',
-                  header="<!-- Start of page -->",
+                  header="<!-- Start of page -->\n" + header_css,
                   bodyattrs=dict({'style': 'padding-left: 3px;'}),
                   doctype='<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">',
                   metainfo=({'text/html': 'charset=utf-8', 'keywords': 'quantum dataset',
