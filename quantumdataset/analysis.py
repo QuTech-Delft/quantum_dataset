@@ -12,7 +12,7 @@ from qtt.data import default_setpoint_array
 from qtt.algorithms.random_telegraph_signal import tunnelrates_RTS, fit_double_gaussian, _plot_rts_histogram
 import qtt.algorithms.allxy
 
-def _parse_1d_dataset(dataset):
+def _parse_1d_dataset(dataset : DataSet) -> tuple:
     y_data = np.array(dataset.default_parameter_array())
     x_data = np.array(qtt.data.default_setpoint_array(dataset))
     return x_data, y_data
@@ -22,7 +22,7 @@ def analyse_coulomb(dataset : DataSet, fig : int) -> dict:
     parameters = {'typicalhalfwidth': 2}
     qtt.algorithms.coulomb.analyseCoulombPeaks(dataset, fig=fig, verbose=2, parameters=parameters)
     plt.legend()
-
+    return {}
 
 def analyse_pinchoff(dataset : DataSet, fig : int) -> dict:
     result = qtt.algorithms.gatesweep.analyseGateSweep(dataset, fig=fig)
@@ -50,7 +50,7 @@ def analyse_time_ramsey(dataset : DataSet, fig : int) -> dict:
     return {'fit_parameters': fit_parameters}
 
 
-def analyse_polarization_line(dataset : DataSet, fig : int, verbose=1):
+def analyse_polarization_line(dataset : DataSet, fig : int, verbose=1) -> dict:
     """  Analyse dataset with polarization line """
     if verbose:
         print('pol_fitting on dataset: %s' % dataset.location)
@@ -66,6 +66,7 @@ def analyse_polarization_line(dataset : DataSet, fig : int, verbose=1):
 
     par_fit, initial_parameters, results = fit_pol_all(delta_uev, signal, kT)
     plot_polarization_fit(delta_uev, signal, results, fig)
+    return {}
 
 
 def analyse_RTS(dataset : DataSet, fig : int) -> dict:
@@ -85,3 +86,4 @@ def analyse_RTS(dataset : DataSet, fig : int) -> dict:
     plt.title('Selection of points')
     plt.subplot(1, 2, 2)
     _plot_rts_histogram(rtsdata, num_bins, par_fit, split, 'Histogram')
+    return {}
