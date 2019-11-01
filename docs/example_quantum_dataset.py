@@ -18,7 +18,8 @@ import matplotlib.pyplot as plt
 import qtt
 import qtt.utilities.json_serializer
 
-from quantumdataset import QuantumDataset
+from quantumdataset import QuantumDataset, install_quantum_dataset
+
 
 
 # %% Create QuantumDataset object
@@ -29,7 +30,9 @@ if not os.path.exists(dataset_location):
     dataset_location = qtt.utilities.tools.mkdirc(os.path.join(
         os.path.split(qtt.__file__)[0], '..', 'QuantumDataset2'))
 
-#dataset_location = r'C:\data\qd\QuantumDataset-qi'
+dataset_location =tempfile.mkdtemp(prefix='quantum-dataset')
+
+install_quantum_dataset(location=dataset_location)
 
 quantum_dataset = QuantumDataset(datadir=dataset_location)
 quantum_dataset.show_data()
@@ -151,23 +154,3 @@ webbrowser.open(filename, new=1)
 
 # %%
 
-from io import BytesIO
-from urllib.request import urlopen
-from zipfile import ZipFile
-
-
-def install_quantum_dataset(location, overwrite=False):
-    qdfile = os.path.join(location, 'quantumdataset.txt')
-    if os.path.exists(qdfile) and not overwrite:
-
-        raise Exception(f'file {qdfile} exists, not overwriting dataset')
-
-    zipurl = 'https://github.com/QuTech-Delft/quantum_dataset/releases/download/Test/QuantumDataset.zip'
-
-    print(f'downloading Quantum Dataset from {zipurl} to {location}')
-    with urlopen(zipurl) as zipresp:
-        with ZipFile(BytesIO(zipresp.read())) as zfile:
-            zfile.extractall(location)
-
-
-install_quantum_dataset(location=qtt.utilities.tools.mkdirc(r'c:\data\tmp\qdx'))

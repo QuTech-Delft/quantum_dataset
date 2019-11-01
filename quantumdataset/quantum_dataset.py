@@ -17,9 +17,28 @@ from MarkupPy import markup
 from MarkupPy.markup import oneliner as oneliner
 import imageio
 
+import qcodes
+import qtt.gui.dataviewer
 import qtt
 import qtt.utilities.json_serializer
 
+from io import BytesIO
+from urllib.request import urlopen
+from zipfile import ZipFile
+
+
+def install_quantum_dataset(location, overwrite=False):
+    qdfile = os.path.join(location, 'quantumdataset.txt')
+    if os.path.exists(qdfile) and not overwrite:
+
+        raise Exception(f'file {qdfile} exists, not overwriting dataset')
+
+    zipurl = 'https://github.com/QuTech-Delft/quantum_dataset/releases/download/Test/QuantumDataset.zip'
+
+    print(f'downloading Quantum Dataset from {zipurl} to {location}')
+    with urlopen(zipurl) as zipresp:
+        with ZipFile(BytesIO(zipresp.read())) as zfile:
+            zfile.extractall(location)
 
 class QuantumDataset():
 
@@ -67,7 +86,7 @@ class QuantumDataset():
         for subdir in self.tags:
             sdir = os.path.join(self._test_datadir, subdir)
             qtt.utilities.tools.mkdirc(sdir)
-            ll = self.list_subtags(subdir)  # os.listdir(sdir)
+            ll = self.list_subtags(subdir)  
             print('tag %s: %d results' % (subdir, len(ll)))
 
     def list_subtags(self, tag):
@@ -75,12 +94,6 @@ class QuantumDataset():
         ll = qtt.gui.dataviewer.DataViewer.find_datafiles(datadir=sdir, extensions=self._datafile_extensions)
         subtags = [os.path.relpath(path, start=sdir) for path in ll]
         return subtags
-
-    def results_old(self, tag):
-        sdir = os.path.join(self._test_datadir, tag)
-        ll = qtt.gui.dataviewer.DataViewer.find_datafiles(datadir=sdir, extensions=self._datafile_extensions)
-
-        return ll
 
     def plot_dataset(self, dataset, fig=100):
         """ Plot a dataset into a matplotlib figure window """
@@ -97,10 +110,7 @@ class QuantumDataset():
 
     def show(self, tag, fig=100):
 
-        import matplotlib.pyplot as plt
 
-        import qtt.gui.dataviewer
-        import numpy as np
         sdir = os.path.join(self._test_datadir, tag)
         datafiles = qtt.gui.dataviewer.DataViewer.find_datafiles(datadir=sdir, )
         print('tag %s: %d result(s)' % (tag, len(datafiles)))
@@ -202,6 +212,7 @@ class QuantumDataset():
             page = self.generate_results_page(tag, htmldir, filename, plot_function=plot_function)
 
         page = self._generate_main_page(htmldir)
+        return page
 
     def _generate_main_page(self, htmldir):
         """ Generate overview page with results """
@@ -259,13 +270,11 @@ class QuantumDataset():
 
     def save_dataset(self, dataset, tag, subtag=None, overwrite=False):
         """ Save dataset to disk """
-        if qcodes is not None:
-            if isinstance(dataset, qcodes.data.data_set.DataSet):
+        if isinstance(dataset, qcodes.data.data_set.DataSet):
                 dataset = qtt.data.dataset_to_dictionary(dataset)
         if not isinstance(dataset, dict):
             raise Exception('cannot store dataset of type %s' % type(dataset))
 
-        # store
         if subtag is None:
             subtag = dataset['extra']['location'].replace('/', '_')
             subtag = subtag.replace('\\', '_')
