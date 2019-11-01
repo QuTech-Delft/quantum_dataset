@@ -43,7 +43,7 @@ setup(name='quantum_dataset',
       ],
       license='MIT',
       packages=['quantumdataset'],
-      install_requires=['numpy', 'qtt', 'MarkupPy', 'imageio'],
+      install_requires=['numpy', 'qtt', 'MarkupPy', 'imageio', 'PyQt5'],
       tests_require=['pytest'],
       zip_safe=False,
       )
