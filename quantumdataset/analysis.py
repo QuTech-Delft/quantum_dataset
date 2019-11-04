@@ -1,5 +1,5 @@
 import numpy as np
-from qcodes import DataSet 
+from qcodes import DataSet
 
 import qtt
 import qtt.algorithms.functions
@@ -12,30 +12,34 @@ from qtt.data import default_setpoint_array
 from qtt.algorithms.random_telegraph_signal import tunnelrates_RTS, fit_double_gaussian, _plot_rts_histogram
 import qtt.algorithms.allxy
 
-def _parse_1d_dataset(dataset : DataSet) -> tuple:
+
+def _parse_1d_dataset(dataset: DataSet) -> tuple:
     y_data = np.array(dataset.default_parameter_array())
     x_data = np.array(qtt.data.default_setpoint_array(dataset))
     return x_data, y_data
 
-def analyse_coulomb(dataset : DataSet, fig : int) -> dict:
+
+def analyse_coulomb(dataset: DataSet, fig: int) -> dict:
     """ Analyse dataset with Coulomb peaks """
     parameters = {'typicalhalfwidth': 2}
     qtt.algorithms.coulomb.analyseCoulombPeaks(dataset, fig=fig, verbose=2, parameters=parameters)
     plt.legend()
     return {}
 
-def analyse_pinchoff(dataset : DataSet, fig : int) -> dict:
+
+def analyse_pinchoff(dataset: DataSet, fig: int) -> dict:
     result = qtt.algorithms.gatesweep.analyseGateSweep(dataset, fig=fig)
     plt.legend()
     return result
 
 
-def analyse_allxy(dataset : DataSet, fig : int) -> dict:
+def analyse_allxy(dataset: DataSet, fig: int) -> dict:
     result = qtt.algorithms.allxy.fit_allxy(dataset)
     qtt.algorithms.allxy.plot_allxy(dataset, result, fig=fig)
     return result
 
-def analyse_time_rabi(dataset : DataSet, fig : int) -> dict:
+
+def analyse_time_rabi(dataset: DataSet, fig: int) -> dict:
     x_data, y_data = _parse_1d_dataset(dataset)
     fit_parameters, xx = qtt.algorithms.functions.fit_gauss_ramsey(x_data, y_data)
     qtt.algorithms.functions.plot_gauss_ramsey_fit(x_data, y_data, fit_parameters, fig=fig)
@@ -43,14 +47,14 @@ def analyse_time_rabi(dataset : DataSet, fig : int) -> dict:
     return {'fit_parameters': fit_parameters}
 
 
-def analyse_time_ramsey(dataset : DataSet, fig : int) -> dict:
+def analyse_time_ramsey(dataset: DataSet, fig: int) -> dict:
     x_data, y_data = _parse_1d_dataset(dataset)
     fit_parameters, xx = qtt.algorithms.functions.fit_gauss_ramsey(x_data, y_data)
     qtt.algorithms.functions.plot_gauss_ramsey_fit(x_data, y_data, fit_parameters, fig=fig)
     return {'fit_parameters': fit_parameters}
 
 
-def analyse_polarization_line(dataset : DataSet, fig : int, verbose=1) -> dict:
+def analyse_polarization_line(dataset: DataSet, fig: int, verbose=1) -> dict:
     """  Analyse dataset with polarization line """
     if verbose:
         print('pol_fitting on dataset: %s' % dataset.location)
@@ -69,7 +73,7 @@ def analyse_polarization_line(dataset : DataSet, fig : int, verbose=1) -> dict:
     return {}
 
 
-def analyse_RTS(dataset : DataSet, fig : int) -> dict:
+def analyse_RTS(dataset: DataSet, fig: int) -> dict:
     time = default_setpoint_array(dataset)
     rtsdata = np.array(dataset.default_parameter_array())
     num_bins = 40

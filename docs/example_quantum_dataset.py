@@ -22,7 +22,6 @@ from quantumdataset import QuantumDataset, install_quantum_dataset
 from quantumdataset.analysis import analyse_time_rabi, analyse_time_ramsey, analyse_pinchoff, analyse_coulomb, analyse_polarization_line, analyse_RTS
 
 
-
 # %% Create QuantumDataset object
 
 dataset_location = r'W:\staff-groups\tnw\ns\qt\spin-qubits\data\eendebakpt\QuantumDataset2'
@@ -31,7 +30,7 @@ if not os.path.exists(dataset_location):
     dataset_location = qtt.utilities.tools.mkdirc(os.path.join(
         os.path.split(qtt.__file__)[0], '..', 'QuantumDataset2'))
 
-dataset_location =tempfile.mkdtemp(prefix='quantum-dataset')
+dataset_location = tempfile.mkdtemp(prefix='quantum-dataset-')
 
 quantum_dataset = QuantumDataset(datadir=dataset_location)
 quantum_dataset.show_data()
@@ -70,9 +69,8 @@ save_pinchoff = quantum_dataset.save_pinchoff
 htmldir = qtt.utilities.tools.mkdirc(tempfile.mkdtemp(prefix='quantumdataset-polarization-fitting'))
 
 filename = os.path.join(htmldir, 'testpage.html')
-page = quantum_dataset.generate_results_page('pol_fitting', htmldir, filename, plot_function=analyse_pol_fitting)
+page = quantum_dataset.generate_results_page('pol_fitting', htmldir, filename, plot_function=analyse_polarization_line)
 webbrowser.open(filename, new=1)
 
 
 # %%
-
