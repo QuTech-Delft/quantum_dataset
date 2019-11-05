@@ -9,7 +9,7 @@
 
 import os
 import distutils.version
-
+from typing import Optional, List, Callable
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -21,13 +21,14 @@ import qcodes
 import qtt.gui.dataviewer
 import qtt
 import qtt.utilities.json_serializer
+from qcodes import DataSet
 
 from io import BytesIO
 from urllib.request import urlopen
 from zipfile import ZipFile
 
 
-def install_quantum_dataset(location, overwrite=False):
+def install_quantum_dataset(location: str, overwrite: bool = False):
     qdfile = os.path.join(location, 'quantumdataset.txt')
     if os.path.exists(qdfile) and not overwrite:
 
@@ -38,12 +39,14 @@ def install_quantum_dataset(location, overwrite=False):
     print(f'downloading Quantum Dataset from {zipurl} to {location}')
     with urlopen(zipurl) as zipresp:
         with ZipFile(BytesIO(zipresp.read())) as zfile:
+            print(f'   extracting data')
             zfile.extractall(location)
+
 
 class QuantumDataset():
 
-    def __init__(self, datadir, tags=None):
-        """ Create object to load and store datasets
+    def __init__(self, datadir: str, tags: Optional[List[str]] = None):
+        """ Create object to load and store quantum datasets
 
         Args:
             datadir (str): directory with stored results
@@ -53,6 +56,12 @@ class QuantumDataset():
         self._minimal_version = '0.1.2'
         self._test_datadir = datadir
         self._datafile_extensions = ['.json']
+
+        self._header_css = '<style type="text/css">\n  body { font-family: Verdana, Geneva, sans-serif; }\n</style>\n'
+
+        if self.check_quantum_dataset_installation(datadir) is None:
+            install_quantum_dataset(location=datadir)
+
         if tags is None:
             tags = os.listdir(datadir)
             tags = [tag for tag in tags if '.' not in tag]
@@ -61,14 +70,26 @@ class QuantumDataset():
             sdir = os.path.join(self._test_datadir, subdir)
             qtt.utilities.tools.mkdirc(sdir)
 
-    def _check_data(self):
-        """ Check whether the required data is present """
+    @staticmethod
+    def check_quantum_dataset_installation(location: str) -> Optional[str]:
+        """  Return version of the Quantum DataSet installed 
+
+        Returns None if no data is installed
+        """
+        qdfile = os.path.join(location, 'quantumdataset.txt')
+        if not os.path.exists(qdfile):
+            return None
         try:
-            with open(os.path.join(self._test_datadir, 'quantumdataset.txt'), 'rt') as fid:
+            with open(os.path.join(location, 'quantumdataset.txt'), 'rt') as fid:
                 version = fid.readline().strip()
         except Exception as ex:
-            raise Exception('could not find data for QuantumDataset at location %s' % self._test_datadir) from ex
-        if not distutils.version.StrictVersion(self._version) <= distutils.version.StrictVersion(version):
+            raise Exception('could not correct data for QuantumDataset at location %s' % location) from ex
+        return version
+
+    def _check_data(self):
+        """ Check whether the required data is present """
+        version = self.check_quantum_dataset_installation(self._test_datadir)
+        if not distutils.version.StrictVersion(self._minimal_version) <= distutils.version.StrictVersion(version):
             raise Exception('version of data %s is older than version required %s' % (version, self._minimal_version))
 
     def generate_save_function(self, tag):
@@ -86,20 +107,20 @@ class QuantumDataset():
         for subdir in self.tags:
             sdir = os.path.join(self._test_datadir, subdir)
             qtt.utilities.tools.mkdirc(sdir)
-            ll = self.list_subtags(subdir)  
+            ll = self.list_subtags(subdir)
             print('tag %s: %d results' % (subdir, len(ll)))
 
-    def list_subtags(self, tag):
+    def list_subtags(self, tag: str) -> List[str]:
         sdir = os.path.join(self._test_datadir, tag)
-        ll = qtt.gui.dataviewer.DataViewer.find_datafiles(datadir=sdir, extensions=self._datafile_extensions)
+        ll = qtt.gui.dataviewer.DataViewer.find_datafiles(datadir=sdir, extensions=self._datafile_extensions, show_progress = False)
         subtags = [os.path.relpath(path, start=sdir) for path in ll]
         return subtags
 
-    def plot_dataset(self, dataset, fig=100):
+    def plot_dataset(self, dataset: DataSet, fig: int = 100):
         """ Plot a dataset into a matplotlib figure window """
         qtt.data.plot_dataset(dataset, fig=fig)
 
-    def _figure2image(self, fig):
+    def _figure2image(self, fig: int) -> np.ndarray:
         """ Convert matplotlib figure window to an RGB image """
         Fig = plt.figure(fig)
         plt.draw()
@@ -108,8 +129,8 @@ class QuantumDataset():
         data = data.reshape(Fig.canvas.get_width_height()[::-1] + (3,))
         return data
 
-    def show(self, tag, fig=100):
-
+    def show(self, tag: str, fig: int = 100):
+        """ Show all datasets for a specific tag """
 
         sdir = os.path.join(self._test_datadir, tag)
         datafiles = qtt.gui.dataviewer.DataViewer.find_datafiles(datadir=sdir, )
@@ -142,7 +163,7 @@ class QuantumDataset():
             except Exception as ex:
                 print('failed to plot %s' % l)
 
-    def generate_results_page(self, tag, htmldir, filename, plot_function=None, verbose=1):
+    def generate_results_page(self, tag: str, htmldir: str, filename: str, plot_function: Optional[Callable] = None, verbose: int = 1):
         """ Generate a result page for a particular tag """
 
         if verbose:
@@ -153,9 +174,8 @@ class QuantumDataset():
 
         page = markup.page()
         page.init(title="Quantum Dataset: tag %s" % tag,
-                  # css=('../oastyle.css'),
                   lang='en',  # htmlattrs=dict({'xmlns': 'http://www.w3.org/1999/xhtml', 'xml:lang': 'en'}),
-                  header="<!-- Start of page -->",
+                  header="<!-- Start of page -->\n" + self._header_css,
                   bodyattrs=dict({'style': 'padding-left: 3px;'}),
                   doctype='<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">',
                   metainfo=({'text/html': 'charset=utf-8', 'keywords': 'quantum dataset',
@@ -191,7 +211,7 @@ class QuantumDataset():
                 print(dataset)
 
             plot_function(dataset, fig=123)
-            image = self._figure2image(fig=123)[:, :, ::-1]
+            image = self._figure2image(fig=123)
             imageio.imwrite(imagefile, image)
             page.a(name="dataset%d" % ii)
             page.h3('Dataset: %s' % dataset_name)
@@ -216,10 +236,11 @@ class QuantumDataset():
 
     def _generate_main_page(self, htmldir):
         """ Generate overview page with results """
+
         page = markup.page()
         page.init(title="Quantum Dataset",
                   lang='en',
-                  header="<!-- Start of page -->",
+                  header="<!-- Start of page -->\n" + self._header_css,
                   bodyattrs=dict({'style': 'padding-left: 3px;'}),
                   doctype='<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">',
                   metainfo=({'text/html': 'charset=utf-8', 'keywords': 'quantum dataset',
@@ -254,7 +275,9 @@ class QuantumDataset():
             filename += '.json'
         return filename
 
-    def load_dataset(self, tag=None, subtag=None, filename=None, output_format=None):
+    def load_dataset(self, tag: Optional[str] = None, subtag: Optional[str] = None, filename: Optional[str] = None, output_format: Optional[str] = None) -> DataSet:
+        """ Load a dataset from the database
+        """
         if isinstance(subtag, int):
             subtag = self.list_subtags(tag)[subtag]
         if filename is None:
@@ -268,10 +291,10 @@ class QuantumDataset():
             raise Exception('output_format %s not valid' % (output_format,))
         return dataset
 
-    def save_dataset(self, dataset, tag, subtag=None, overwrite=False):
+    def save_dataset(self, dataset: DataSet, tag: str, subtag: Optional[str] = None, overwrite: bool = False) -> str:
         """ Save dataset to disk """
         if isinstance(dataset, qcodes.data.data_set.DataSet):
-                dataset = qtt.data.dataset_to_dictionary(dataset)
+            dataset = qtt.data.dataset_to_dictionary(dataset)
         if not isinstance(dataset, dict):
             raise Exception('cannot store dataset of type %s' % type(dataset))
 
@@ -288,5 +311,6 @@ class QuantumDataset():
         qtt.utilities.json_serializer.save_json(dataset, filename)
         return filename
 
-    def list_tags(self):
+    def list_tags(self) -> List[str]:
+        """ List all the tags currently in the database """
         return self.tags
