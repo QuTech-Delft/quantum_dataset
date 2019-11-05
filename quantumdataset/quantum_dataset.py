@@ -184,7 +184,7 @@ class QuantumDataset():
 
         page.h1('Quantum Dataset: tag %s' % tag)
         page.h1.close()
-        page.p('For more information see https://github.com/QuTech-Delft/qtt')
+        page.p('For more information see https://github.com/QuTech-Delft/quantum_dataset')
         page.p.close()
 
         subtags = self.list_subtags(tag)
