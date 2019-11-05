@@ -19,6 +19,7 @@ script:
     - pytest --version
     - xvfb-run -a coverage run --source="./quantumdataset" -m pytest
     - mypy quantumdataset --ignore-missing-imports
+    - jupyter nbconvert --to notebook --execute "docs/example_quantum_dataset.ipynb"
 
 after_success:
   - coveralls
