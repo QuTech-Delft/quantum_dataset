@@ -39,6 +39,7 @@ def install_quantum_dataset(location: str, overwrite: bool = False):
     print(f'downloading Quantum Dataset from {zipurl} to {location}')
     with urlopen(zipurl) as zipresp:
         with ZipFile(BytesIO(zipresp.read())) as zfile:
+            print(f'   extracting data')
             zfile.extractall(location)
 
 
@@ -56,7 +57,7 @@ class QuantumDataset():
         self._test_datadir = datadir
         self._datafile_extensions = ['.json']
 
-        self._header_css = '<style type="text/css">\n p { font-family: Verdana, Geneva, sans-serif; }\n </style>\n'
+        self._header_css = '<style type="text/css">\n  body { font-family: Verdana, Geneva, sans-serif; }\n</style>\n'
 
         if self.check_quantum_dataset_installation(datadir) is None:
             install_quantum_dataset(location=datadir)
@@ -111,7 +112,7 @@ class QuantumDataset():
 
     def list_subtags(self, tag: str) -> List[str]:
         sdir = os.path.join(self._test_datadir, tag)
-        ll = qtt.gui.dataviewer.DataViewer.find_datafiles(datadir=sdir, extensions=self._datafile_extensions)
+        ll = qtt.gui.dataviewer.DataViewer.find_datafiles(datadir=sdir, extensions=self._datafile_extensions, show_progress = False)
         subtags = [os.path.relpath(path, start=sdir) for path in ll]
         return subtags
 
