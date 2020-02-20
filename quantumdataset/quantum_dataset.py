@@ -133,7 +133,7 @@ class QuantumDataset():
         """ Show all datasets for a specific tag """
 
         sdir = os.path.join(self._test_datadir, tag)
-        datafiles = qtt.gui.dataviewer.DataViewer.find_datafiles(datadir=sdir, )
+        datafiles = qtt.gui.dataviewer.DataViewer.find_datafiles(datadir=sdir, extensions= self._datafile_extensions)
         print('tag %s: %d result(s)' % (tag, len(datafiles)))
 
         nx = ny = int(np.sqrt(len(datafiles)) + 1)
@@ -161,7 +161,7 @@ class QuantumDataset():
                 plt.axis('off')
                 plt.draw()
             except Exception as ex:
-                print('failed to plot %s' % l)
+                print(f'failed to plot {l} ({ex})')
 
     def generate_results_page(self, tag: str, htmldir: str, filename: str, plot_function: Optional[Callable] = None, verbose: int = 1):
         """ Generate a result page for a particular tag """
