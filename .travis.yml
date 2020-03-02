@@ -12,6 +12,7 @@ matrix:
 install:
     - pip install coveralls mypy
     - pip install -e .
+    - pip install jupyter
     - export QT_QPA_PLATFORM=offscreen
 
 script:
