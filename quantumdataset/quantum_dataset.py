@@ -21,7 +21,7 @@ import qcodes
 import qtt.gui.dataviewer
 import qtt
 import qtt.utilities.json_serializer
-from qcodes import DataSet
+from qcodes.data.data_set import DataSet
 
 from io import BytesIO
 from urllib.request import urlopen
@@ -72,7 +72,7 @@ class QuantumDataset():
 
     @staticmethod
     def check_quantum_dataset_installation(location: str) -> Optional[str]:
-        """  Return version of the Quantum DataSet installed 
+        """  Return version of the Quantum DataSet installed
 
         Returns None if no data is installed
         """
@@ -184,7 +184,7 @@ class QuantumDataset():
 
         page.h1('Quantum Dataset: tag %s' % tag)
         page.h1.close()
-        page.p('For more information see https://github.com/QuTech-Delft/qtt')
+        page.p('For more information see https://github.com/QuTech-Delft/quantum_dataset')
         page.p.close()
 
         subtags = self.list_subtags(tag)
@@ -206,7 +206,7 @@ class QuantumDataset():
             if verbose:
                 print('generate_results_page %s: %d/%d: dataset_name %s' %
                       (tag, ii, len(subtags), os.path.basename(dataset_name)))
-            dataset = self.load_dataset(filename=dataset_name, output_format='qcodes.DataSet')
+            dataset = self.load_dataset(filename=dataset_name, output_format='DataSet')
             if verbose >= 3:
                 print(dataset)
 
@@ -224,7 +224,7 @@ class QuantumDataset():
 
         return page
 
-    def generate_overview_page(self, htmldir, plot_functions):
+    def generate_overview_page(self, htmldir : str, plot_functions : dict):
         for tag in self.list_tags():
             filename = os.path.join(htmldir, 'qdataset-%s.html' % tag)
 
@@ -283,7 +283,7 @@ class QuantumDataset():
         if filename is None:
             filename = self.generate_filename(tag, subtag)
         dataset_dictionary = qtt.utilities.json_serializer.load_json(filename)
-        if output_format == 'qcodes.DataSet' or output_format is None:
+        if output_format == 'DataSet' or output_format is None:
             dataset = qtt.data.dictionary_to_dataset(dataset_dictionary)
         elif output_format == 'dict':
             dataset = dataset_dictionary

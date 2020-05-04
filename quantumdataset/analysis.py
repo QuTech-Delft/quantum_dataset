@@ -1,5 +1,5 @@
 import numpy as np
-from qcodes import DataSet
+from qcodes.data.data_set import DataSet
 
 import qtt
 import qtt.algorithms.functions
