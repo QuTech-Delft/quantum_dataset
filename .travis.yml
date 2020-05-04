@@ -13,6 +13,7 @@ install:
     - pip install coveralls mypy
     - pip install --upgrade pip
     - pip install PyQt5
+    - pip install git+ssh://git@github.com/QuTech-Delft/qtt.git
     - pip install -e .
     - pip install jupyter
     - export QT_QPA_PLATFORM=offscreen
