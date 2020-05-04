@@ -224,7 +224,7 @@ class QuantumDataset():
 
         return page
 
-    def generate_overview_page(self, htmldir, plot_functions):
+    def generate_overview_page(self, htmldir : str, plot_functions : dict):
         for tag in self.list_tags():
             filename = os.path.join(htmldir, 'qdataset-%s.html' % tag)
 
