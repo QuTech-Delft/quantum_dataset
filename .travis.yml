@@ -4,15 +4,16 @@ matrix:
   - name: Python 3.7
     python: 3.7
     sudo: true
-    dist: xenial
+    dist: bionic
     env: QT_QPA_PLATFORM=offscreen
     services:
     - xvfb
 
 install:
     - pip install coveralls mypy
-    - pip install -e .
+    - pip install --upgrade pip
     - pip install PyQt5
+    - pip install -e .
     - pip install jupyter
     - export QT_QPA_PLATFORM=offscreen
 
