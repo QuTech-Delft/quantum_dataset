@@ -21,7 +21,7 @@ import qcodes
 import qtt.gui.dataviewer
 import qtt
 import qtt.utilities.json_serializer
-from qcodes import DataSet
+from qcodes.data.data_set import DataSet
 
 from io import BytesIO
 from urllib.request import urlopen
@@ -72,7 +72,7 @@ class QuantumDataset():
 
     @staticmethod
     def check_quantum_dataset_installation(location: str) -> Optional[str]:
-        """  Return version of the Quantum DataSet installed 
+        """  Return version of the Quantum DataSet installed
 
         Returns None if no data is installed
         """
@@ -206,7 +206,7 @@ class QuantumDataset():
             if verbose:
                 print('generate_results_page %s: %d/%d: dataset_name %s' %
                       (tag, ii, len(subtags), os.path.basename(dataset_name)))
-            dataset = self.load_dataset(filename=dataset_name, output_format='qcodes.DataSet')
+            dataset = self.load_dataset(filename=dataset_name, output_format='DataSet')
             if verbose >= 3:
                 print(dataset)
 
@@ -283,7 +283,7 @@ class QuantumDataset():
         if filename is None:
             filename = self.generate_filename(tag, subtag)
         dataset_dictionary = qtt.utilities.json_serializer.load_json(filename)
-        if output_format == 'qcodes.DataSet' or output_format is None:
+        if output_format == 'DataSet' or output_format is None:
             dataset = qtt.data.dictionary_to_dataset(dataset_dictionary)
         elif output_format == 'dict':
             dataset = dataset_dictionary
