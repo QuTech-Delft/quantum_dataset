@@ -31,7 +31,7 @@ setup(name='quantum_dataset',
       description='Collection of measurements on quantum devices',
       long_description=readme(),
       long_description_content_type='text/markdown',
-      url='http://qutech.nl',
+      url='https://github.com/QuTech-Delft/quantum_dataset/',
       classifiers=[
           'Development Status :: 3 - Alpha',
           'Intended Audience :: Science/Research',
