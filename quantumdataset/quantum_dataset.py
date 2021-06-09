@@ -7,6 +7,7 @@
 # %% Import the packages needed
 
 import distutils.version
+import logging
 import os
 from io import BytesIO
 from typing import Callable, List, Optional
@@ -36,7 +37,7 @@ def install_quantum_dataset(location: str, overwrite: bool = False):
     print(f'downloading Quantum Dataset from {zipurl} to {location}')
     with urlopen(zipurl) as zipresp:
         with ZipFile(BytesIO(zipresp.read())) as zfile:
-            print(f'   extracting data')
+            print('   extracting data')
             zfile.extractall(location)
 
 
@@ -77,6 +78,7 @@ class QuantumDataset():
         """
         qdfile = os.path.join(location, 'quantumdataset.txt')
         if not os.path.exists(qdfile):
+            logging.info(f'could not find {qdfile}')
             return None
         try:
             with open(os.path.join(location, 'quantumdataset.txt')) as fid:
