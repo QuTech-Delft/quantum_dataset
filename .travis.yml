@@ -1,8 +1,8 @@
 language: python
 matrix:
   include:
-  - name: Python 3.9
-    python: 3.9
+  - name: Python 3.8
+    python: 3.8
     sudo: true
     dist: xenial
     env: QT_QPA_PLATFORM=offscreen
