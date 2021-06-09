@@ -129,7 +129,7 @@ class QuantumDataset():
         plt.pause(1e-3)
 
         s, (width, height) = Fig.canvas.print_to_buffer()
-        X = np.frombuffer(s, np.uint8).reshape(height, width, 4)[:, :, 0:3]
+        data = np.frombuffer(s, np.uint8).reshape(height, width, 4)[:, :, 0:3]
         #data = np.frombuffer(Fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
         #data = data.reshape(Fig.canvas.get_width_height()[::-1] + (3,))
         return data
