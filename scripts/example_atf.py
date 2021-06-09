@@ -8,14 +8,13 @@ which require more complex testing than the normal unit testing.
 
 # %% Load packages
 import os
-from typing import Any, Sequence
 import unittest
+from typing import Any, Sequence
 
-import numpy as np
-from numpy import array
 import matplotlib.pyplot as plt
-
+import numpy as np
 import qtt
+from numpy import array
 from sqt.analysis.allxy import fit_allxy, plot_allxy
 
 import quantumdataset

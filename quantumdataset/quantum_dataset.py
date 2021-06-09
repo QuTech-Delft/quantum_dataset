@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """ Module to load and use the Delft Quantum DataSet
 
 @author:    Pieter Eendebak <pieter.eendebak@tno.nl>
@@ -7,25 +6,24 @@
 
 # %% Import the packages needed
 
-import os
 import distutils.version
-from typing import Optional, List, Callable
-import numpy as np
-import matplotlib.pyplot as plt
-
-from MarkupPy import markup
-from MarkupPy.markup import oneliner as oneliner
-import imageio
-
-import qcodes
-import qtt.gui.dataviewer
-import qtt
-import qtt.utilities.json_serializer
-from qcodes.data.data_set import DataSet
-
+import logging
+import os
 from io import BytesIO
+from typing import Callable, List, Optional
 from urllib.request import urlopen
 from zipfile import ZipFile
+
+import imageio
+import matplotlib.pyplot as plt
+import numpy as np
+import qcodes
+import qtt
+import qtt.gui.dataviewer
+import qtt.utilities.json_serializer
+from MarkupPy import markup
+from MarkupPy.markup import oneliner as oneliner
+from qcodes.data.data_set import DataSet
 
 
 def install_quantum_dataset(location: str, overwrite: bool = False):
@@ -39,7 +37,7 @@ def install_quantum_dataset(location: str, overwrite: bool = False):
     print(f'downloading Quantum Dataset from {zipurl} to {location}')
     with urlopen(zipurl) as zipresp:
         with ZipFile(BytesIO(zipresp.read())) as zfile:
-            print(f'   extracting data')
+            print('   extracting data')
             zfile.extractall(location)
 
 
@@ -80,9 +78,10 @@ class QuantumDataset():
         """
         qdfile = os.path.join(location, 'quantumdataset.txt')
         if not os.path.exists(qdfile):
+            logging.info(f'could not find {qdfile}')
             return None
         try:
-            with open(os.path.join(location, 'quantumdataset.txt'), 'rt') as fid:
+            with open(os.path.join(location, 'quantumdataset.txt')) as fid:
                 version = fid.readline().strip()
         except Exception as ex:
             raise Exception('could not correct data for QuantumDataset at location %s' % location) from ex
@@ -114,7 +113,8 @@ class QuantumDataset():
 
     def list_subtags(self, tag: str) -> List[str]:
         sdir = os.path.join(self._test_datadir, tag)
-        ll = qtt.gui.dataviewer.DataViewer.find_datafiles(datadir=sdir, extensions=self._datafile_extensions, show_progress = False)
+        ll = qtt.gui.dataviewer.DataViewer.find_datafiles(
+            datadir=sdir, extensions=self._datafile_extensions, show_progress=False)
         subtags = [os.path.relpath(path, start=sdir) for path in ll]
         return subtags
 
@@ -127,15 +127,18 @@ class QuantumDataset():
         Fig = plt.figure(fig)
         plt.draw()
         plt.pause(1e-3)
-        data = np.fromstring(Fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
-        data = data.reshape(Fig.canvas.get_width_height()[::-1] + (3,))
+
+        s, (width, height) = Fig.canvas.print_to_buffer()
+        data = np.frombuffer(s, np.uint8).reshape(height, width, 4)[:, :, 0:3]
+        #data = np.frombuffer(Fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
+        #data = data.reshape(Fig.canvas.get_width_height()[::-1] + (3,))
         return data
 
     def show(self, tag: str, fig: int = 100):
         """ Show all datasets for a specific tag """
 
         sdir = os.path.join(self._test_datadir, tag)
-        datafiles = qtt.gui.dataviewer.DataViewer.find_datafiles(datadir=sdir, extensions= self._datafile_extensions)
+        datafiles = qtt.gui.dataviewer.DataViewer.find_datafiles(datadir=sdir, extensions=self._datafile_extensions)
         print('tag %s: %d result(s)' % (tag, len(datafiles)))
 
         nx = ny = int(np.sqrt(len(datafiles)) + 1)
@@ -226,7 +229,7 @@ class QuantumDataset():
 
         return page
 
-    def generate_overview_page(self, htmldir : str, plot_functions : Optional[dict] =  None):
+    def generate_overview_page(self, htmldir: str, plot_functions: Optional[dict] = None):
         if plot_functions is None:
             plot_functions = {}
         for tag in self.list_tags():
