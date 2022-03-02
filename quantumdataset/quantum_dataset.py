@@ -34,7 +34,7 @@ from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from matplotlib.backends.backend_svg import FigureCanvasSVG
 from matplotlib.figure import Figure
-from qilib.utils.serialization import Serializer
+from quantumdataset.externals.serialization import Serializer
 
 from quantumdataset.xarray_utils import plot_xarray_dataset
 
@@ -89,8 +89,6 @@ class QuantumDataset:
         self._version = 0.2
         self.serializer = Serializer()
 
-        ne = partial(qilib.utils.serialization.encode_numpy_array, encode_to_bytes=False)
-        self.serializer.encoder.encoders[np.ndarray] = ne
 
         self._header_css = '<style type="text/css">\n  body { font-family: Verdana, Geneva, sans-serif; }\n</style>\n'
         if self.check_quantum_dataset_installation(data_directory) is None:
@@ -361,6 +359,10 @@ class QuantumDataset:
 
         with open(filename, "wt") as fid:
             json.dump(encoded_data, fid)
+            
+        mm=self.metadata()
+        mm=mm+[metadata]
+        self.save_database_metadata(mm)
         return filename
 
     def list_tags(self) -> List[str]:
@@ -391,7 +393,7 @@ if __name__ == "__main__":
             subtags = q.list_subtags(tag)
             [data.append((tag, subtag)) for subtag in subtags]
 
-    q2 = self = QuantumDataset(r"C:\data\QuantumDataset2")
+    q2 = self = QuantumDataset(r"d:\data\QuantumDatasetv2")
 
     if 0:
         # convert database
