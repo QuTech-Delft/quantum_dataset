@@ -34,8 +34,8 @@ from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from matplotlib.backends.backend_svg import FigureCanvasSVG
 from matplotlib.figure import Figure
-from quantumdataset.externals.serialization import Serializer
 
+from quantumdataset.externals.serialization import Serializer
 from quantumdataset.xarray_utils import plot_xarray_dataset
 
 
@@ -88,7 +88,6 @@ class QuantumDataset:
         self._datafile_extensions = [".json"]
         self._version = 0.2
         self.serializer = Serializer()
-
 
         self._header_css = '<style type="text/css">\n  body { font-family: Verdana, Geneva, sans-serif; }\n</style>\n'
         if self.check_quantum_dataset_installation(data_directory) is None:
@@ -172,6 +171,8 @@ class QuantumDataset:
     ):
         """Generate a result page for a particular tag"""
         htmldir = Path(htmldir)
+        htmldir.mkdir(exist_ok=True)
+
         if verbose:
             print("generate_results_page: tag %s" % tag)
 
@@ -359,9 +360,9 @@ class QuantumDataset:
 
         with open(filename, "wt") as fid:
             json.dump(encoded_data, fid)
-            
-        mm=self.metadata()
-        mm=mm+[metadata]
+
+        mm = self.metadata()
+        mm = mm + [metadata]
         self.save_database_metadata(mm)
         return filename
 

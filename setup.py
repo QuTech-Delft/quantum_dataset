@@ -43,7 +43,7 @@ setup(
     ],
     license="MIT",
     packages=["quantumdataset"],
-    install_requires=["numpy", "MarkupPy", "dataclasses", "dataclasses_json"],
+    install_requires=["numpy", "xarray", "matplotlib", "MarkupPy", "dataclasses", "dataclasses_json"],
     tests_require=["pytest"],
     zip_safe=False,
 )
