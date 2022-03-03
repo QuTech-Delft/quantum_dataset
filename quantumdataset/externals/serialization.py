@@ -81,7 +81,7 @@ def _decode_bytes_base64(data: Dict[str, Any]) -> bytes:
     return base64.b64decode(data[JsonSerializeKey.CONTENT].encode("utf-8"))
 
 
-def _encode_numpy_number(item: Any) -> Dict[str, Any]:
+def _encode_numpy_number(item: Any) -> Union[Dict[str, Any], float, bool]:
     if isinstance(item, (np.float32, np.float64)):
         return float(item)
     if isinstance(item, np.bool_):
