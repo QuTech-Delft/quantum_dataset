@@ -11,16 +11,14 @@ import json
 import logging
 import os
 import uuid
-from functools import partial
 from io import BytesIO
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 from urllib.request import urlopen
 from zipfile import ZipFile
 
 import matplotlib.pyplot as plt
 import numpy as np
-import qilib.utils.serialization
 import xarray as xr
 from MarkupPy import markup
 from MarkupPy.markup import oneliner as oneliner
@@ -28,7 +26,7 @@ from MarkupPy.markup import oneliner as oneliner
 try:
     import qcodes
 except ImportError:
-    qcodes = None
+    qcodes: Any = None
 from dataclasses import dataclass, field
 
 from dataclasses_json import dataclass_json
@@ -62,7 +60,7 @@ def install_quantum_dataset(location: str, version: str, overwrite: bool = False
     print(f"downloading Quantum Dataset from {zipurl} to {location}")
     with urlopen(zipurl) as zipresp:
         with ZipFile(BytesIO(zipresp.read())) as zfile:
-            print("   extracting data")
+            print("   extracting data...")
             zfile.extractall(location)
 
 
@@ -80,10 +78,9 @@ class QuantumDataset:
         """Create object to load and store quantum datasets
 
         Args:
-            datadir (str): directory with stored results
+            data_directory: directory with stored results
 
         """
-
         self.data_directory = Path(data_directory)
         self._datafile_extensions = [".json"]
         self._version = 0.2
@@ -95,7 +92,7 @@ class QuantumDataset:
             if self.check_quantum_dataset_installation(location=data_directory) is None:
                 raise Exception(f"failed to install dataset at {data_directory}")
 
-    def metadata(self) -> List[Metadata]:
+    def database_metadata(self) -> List[Metadata]:
         """Return database metadata structure"""
         self._metadata = self.load_database_metadata()
         return self._metadata
@@ -131,7 +128,7 @@ class QuantumDataset:
 
     def list_subtags(self, tag: str) -> List[str]:
         """List all subtags for the specified tag"""
-        return sorted({m.name for m in self.metadata() if m.tag == tag})
+        return sorted({m.name for m in self.database_metadata() if m.tag == tag})
 
     def plot_dataset(self, dataset, fig: int = 100):
         """Plot a dataset into a matplotlib figure window"""
@@ -167,10 +164,18 @@ class QuantumDataset:
                 print(f"failed to plot {subtag} ({ex})")
 
     def generate_results_page(
-        self, tag: str, htmldir: str, filename: str, plot_function: Optional[Callable] = None, verbose: int = 1
+        self,
+        tag: str,
+        htmldir: Union[Path, str],
+        filename: str,
+        plot_function: Optional[Callable] = None,
+        verbose: int = 1,
     ):
         """Generate a result page for a particular tag"""
+
+        image_extension = "png"
         htmldir = Path(htmldir)
+        assert isinstance(htmldir, Path)
         htmldir.mkdir(exist_ok=True)
 
         if verbose:
@@ -207,9 +212,8 @@ class QuantumDataset:
         subtags = self.list_subtags(tag)
 
         page.ul()
-
         for ii, subtag in enumerate(subtags):
-            link = oneliner.a(subtag, href="#dataset%d" % ii)  # foo
+            link = oneliner.a(subtag, href=f"#dataset{ii}")
             page.li(link)
         page.ul.close()
 
@@ -218,11 +222,11 @@ class QuantumDataset:
 
         for ii, subtag in enumerate(subtags):
             meta = self.get_metadata(tag=tag, subtag=subtag)
-            dataset_filename = self.generate_filename(meta)
-            imagefile0 = os.path.join("images", tag, f"dataset{ii}.png")
+            dataset_filename = self._generate_dataset_filename(meta)
+            imagefile0 = os.path.join("images", tag, f"dataset{ii}.{image_extension}")
             subdir = image_dir / tag
             subdir.mkdir(exist_ok=True)
-            imagefile = subdir / f"dataset{ii}.png"
+            imagefile = subdir / f"dataset{ii}.{image_extension}"
             if verbose:
                 print("  generate_results_page %s: %d/%d: name %s" % (tag, ii, len(subtags), meta.name))
             dataset = self.load_dataset(tag, subtag)
@@ -283,7 +287,7 @@ class QuantumDataset:
             link = "qdataset-%s.html" % tag
             link = oneliner.a("%s" % tag, href=link)
             subtags = self.list_subtags(tag)
-            page.li(link + ": %d datasets" % len(subtags))
+            page.li(link + f": {len(subtags)} datasets")
         page.ol.close()
 
         if htmldir is not None:
@@ -311,15 +315,17 @@ class QuantumDataset:
 
         else:
             raise TypeError(f"dataset is of type {type(dataset)}")
+
+        assert isinstance(dataset, xr.Dataset)
         return dataset
 
     def convert_dataset_to_dictionary(self, dataset: Union[xr.Dataset, dict]) -> dict:
         """Convert dataset to internal dictionary format"""
         return self.convert_dataset_to_xarray(dataset).to_dict()
 
-    def get_metadata(self, *, uid=None, tag=None, subtag=None):
+    def get_metadata(self, *, uid=None, tag=None, subtag=None) -> Metadata:
 
-        metadata = self.metadata()
+        metadata = self.database_metadata()
         if uid is not None:
             uids = [m.uid for m in metadata]
             idx = uids.index(uid)
@@ -329,13 +335,14 @@ class QuantumDataset:
         assert len(data) == 1
         return data[0]
 
-    def load_dataset(self, tag: Optional[str] = None, subtag: Optional[str] = None) -> xr.Dataset:
+    def load_dataset(self, tag: Optional[str] = None, subtag: Optional[str, int] = None) -> xr.Dataset:
         """Load a dataset from the database"""
         if isinstance(subtag, int):
             subtag = self.list_subtags(tag)[subtag]
+        assert isinstance(subtag, str)
 
         meta = self.get_metadata(tag=tag, subtag=subtag)
-        filename = self.generate_filename(meta)
+        filename = self._generate_dataset_filename(meta)
 
         with open(filename) as fid:
             encoded_data = json.load(fid)
@@ -345,7 +352,8 @@ class QuantumDataset:
         dataset = xr.Dataset.from_dict(data)
         return dataset
 
-    def generate_filename(self, metadata: Metadata) -> str:
+    def _generate_dataset_filename(self, metadata: Metadata) -> str:
+        """Return filename for storage"""
         filename = str(self.data_directory / (metadata.uid + "_" + metadata.tag + "_" + metadata.name + ".json"))
         return filename
 
@@ -354,28 +362,28 @@ class QuantumDataset:
         dataset = self.convert_dataset_to_xarray(dataset)
         dataset_dictionary = dataset.to_dict()
 
-        filename = self.generate_filename(metadata)
+        filename = self._generate_dataset_filename(metadata)
 
         encoded_data = self.serializer.encode_data(dataset_dictionary)
 
         with open(filename, "wt") as fid:
             json.dump(encoded_data, fid)
 
-        mm = self.metadata()
+        mm = self.database_metadata()
         mm = mm + [metadata]
         self.save_database_metadata(mm)
         return filename
 
     def list_tags(self) -> List[str]:
         """List all the tags currently in the database"""
-        return sorted({m.tag for m in self.metadata()})
+        return sorted({m.tag for m in self.database_metadata()})
 
-    def load_database_metadata(self) -> Metadata:
+    def load_database_metadata(self) -> List[Metadata]:
         with open(self.data_directory / "metadata.json") as fid:
             metadata = json.load(fid)
             return [Metadata.from_dict(m) for m in metadata]
 
-    def save_database_metadata(self, metadata: Metadata):
+    def save_database_metadata(self, metadata: List[Metadata]):
         with open(self.data_directory / "metadata.json", "wt") as fid:
             json.dump([m.to_dict() for m in metadata], fid)
 
@@ -394,7 +402,7 @@ if __name__ == "__main__":
             subtags = q.list_subtags(tag)
             [data.append((tag, subtag)) for subtag in subtags]
 
-    q2 = self = QuantumDataset(r"d:\data\QuantumDatasetv2")
+    q2 = self = QuantumDataset(r"c:\data\QuantumDatasetv3")
 
     if 0:
         # convert database
@@ -427,14 +435,14 @@ if __name__ == "__main__":
 
     q2.list_tags()
     q2.show_data()
-    mm = q2.metadata()
+    mm = q2.database_metadata()
 
     ds = q2.load_dataset("allxy", 0)
     q2.plot_dataset(ds, fig=1)
 
     from rich import print as rprint
 
-    rprint(q2.metadata()[:3])
+    rprint(q2.database_metadata()[:3])
 
     if 1:
 
@@ -443,7 +451,7 @@ if __name__ == "__main__":
         q2.show(tag, fig=2)
 
         htmldir = q2.data_directory / "html"
-        htmldir.mkdir(exist_ok=True)
+        # htmldir.mkdir(exist_ok=True)
         with measure_time():
             filename = q2.generate_overview_page(htmldir)
 
@@ -471,14 +479,8 @@ if 0:
     # q2.save_dataset(m2, meta, overwrite=True)
 
     #%%
+    from sqt.utils.plotting import plot_dataset
 
     plot_dataset(m2, fig=1)
 
     tag = "anticrossing"
-
-#%%
-""" TODO
-
-- Consistent naming
-- New PyPi package
-"""
