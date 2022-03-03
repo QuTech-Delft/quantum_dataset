@@ -38,7 +38,7 @@ class TestQuantumDataset(unittest.TestCase):
         self.assertIn("tag allxy", s.getvalue())
 
     def test_database_metadata(self):
-        m = self.qd.metadata()
+        m = self.qd.database_metadata()
         self.assertIsInstance(m, list)
 
         self.assertIsInstance(m[0].tag, str)
