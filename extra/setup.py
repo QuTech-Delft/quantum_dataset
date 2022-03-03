@@ -21,7 +21,7 @@ def get_version(verbose=1, filename="quantumdataset/version.py"):
 
 
 setup(
-    name="quantum_dataset",
+    name="atf",
     version=get_version(),
     use_2to3=False,
     author="Pieter Eendebak",
@@ -42,8 +42,7 @@ setup(
         "Topic :: Scientific/Engineering",
     ],
     license="MIT",
-    packages=["quantumdataset"],
-    install_requires=["numpy", "xarray", "matplotlib", "MarkupPy", "dataclasses", "dataclasses_json"],
+    packages=["atf"],
+    install_requires=["numpy", "matplotlib"],
     tests_require=["pytest"],
-    zip_safe=False,
 )
