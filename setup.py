@@ -13,7 +13,7 @@ def get_version(verbose=1, filename="quantumdataset/version.py"):
 
     with open(filename) as f:
         ln = f.readline()
-        m = re.search(".* " "(.*)" "", ln)
+        m = re.search('.* "(.*)"', ln)
         version = (m.group(1)).strip("'")
     if verbose:
         print("get_version: %s" % version)
