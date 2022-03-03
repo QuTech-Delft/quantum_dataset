@@ -476,6 +476,6 @@ if 0:
 #%%
 """ TODO
 
-- Add new datasets: (sine fitting/dcz), flipping experiment, frequency Rabi, frequency Ramsey (also 2D), anything missing?
+- Consistent naming
 - New PyPi package
 """
