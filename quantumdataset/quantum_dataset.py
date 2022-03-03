@@ -26,7 +26,7 @@ from MarkupPy.markup import oneliner as oneliner
 try:
     import qcodes
 except ImportError:
-    qcodes: Any = None
+    qcodes = None  # type: ignore
 from dataclasses import dataclass, field
 
 from dataclasses_json import dataclass_json
@@ -167,7 +167,7 @@ class QuantumDataset:
         self,
         tag: str,
         htmldir: Union[Path, str],
-        filename: str,
+        filename: Union[Path, str],
         plot_function: Optional[Callable] = None,
         verbose: int = 1,
     ):
@@ -177,6 +177,8 @@ class QuantumDataset:
         htmldir = Path(htmldir)
         assert isinstance(htmldir, Path)
         htmldir.mkdir(exist_ok=True)
+        filename = Path(filename)
+        assert isinstance(filename, Path)
 
         if verbose:
             print("generate_results_page: tag %s" % tag)
@@ -231,28 +233,28 @@ class QuantumDataset:
                 print("  generate_results_page %s: %d/%d: name %s" % (tag, ii, len(subtags), meta.name))
             dataset = self.load_dataset(tag, subtag)
 
-            print_dataset_non_gui(dataset, imagefile)
+            print_dataset_non_gui(dataset, str(imagefile))
             page.a(name="dataset%d" % ii)
             page.h3("Dataset: %s" % oneliner.a(meta.name, href=dataset_filename))
             page.a.close()
             page.img(src=imagefile0)
 
         if filename is not None:
-            with (open(filename, "wt")) as fid:
+            with open(filename, "wt") as fid:
                 fid.write(str(page))
 
         return page
 
     def generate_overview_page(self, htmldir: str, plot_functions: Optional[dict] = None) -> str:
         """Generate HTML page with overview of data in the database"""
-        htmldir = Path(htmldir)
+        htmlpath = Path(htmldir)
         if plot_functions is None:
             plot_functions = {}
         for tag in self.list_tags():
-            filename = htmldir / f"qdataset-{tag}.html"
+            page_filename = htmlpath / f"qdataset-{tag}.html"
 
             plot_function = plot_functions.get(tag, None)
-            page = self.generate_results_page(tag, htmldir, filename, plot_function=plot_function)
+            page = self.generate_results_page(tag, htmlpath, page_filename, plot_function=plot_function)
 
         filename, page = self._generate_main_page(htmldir)
         return filename
@@ -335,9 +337,9 @@ class QuantumDataset:
         assert len(data) == 1
         return data[0]
 
-    def load_dataset(self, tag: Optional[str] = None, subtag: Optional[str, int] = None) -> xr.Dataset:
+    def load_dataset(self, tag: Optional[str] = None, subtag: Union[str, int] = None) -> xr.Dataset:
         """Load a dataset from the database"""
-        if isinstance(subtag, int):
+        if isinstance(subtag, int) and isinstance(tag, str):
             subtag = self.list_subtags(tag)[subtag]
         assert isinstance(subtag, str)
 
@@ -381,11 +383,11 @@ class QuantumDataset:
     def load_database_metadata(self) -> List[Metadata]:
         with open(self.data_directory / "metadata.json") as fid:
             metadata = json.load(fid)
-            return [Metadata.from_dict(m) for m in metadata]
+            return [Metadata.from_dict(m) for m in metadata]  # type: ignore
 
     def save_database_metadata(self, metadata: List[Metadata]):
         with open(self.data_directory / "metadata.json", "wt") as fid:
-            json.dump([m.to_dict() for m in metadata], fid)
+            json.dump([m.to_dict() for m in metadata], fid)  # type: ignore
 
 
 if __name__ == "__main__":
@@ -453,7 +455,7 @@ if __name__ == "__main__":
         htmldir = q2.data_directory / "html"
         # htmldir.mkdir(exist_ok=True)
         with measure_time():
-            filename = q2.generate_overview_page(htmldir)
+            filename = q2.generate_overview_page(str(htmldir))
 
         import webbrowser
 
