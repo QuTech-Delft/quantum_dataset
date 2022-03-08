@@ -88,14 +88,15 @@ class QuantumDataset:
         if data_directory is None:
             data_directory = os.environ.get(QUANTUM_DATASET_LOCATION, None)
         if data_directory is None:
-            data_direcory = tempfile.mkdtemp()
+            data_directory = tempfile.mkdtemp()
             print(f"using temporary folder {data_directory}")
 
-        self.data_directory = Path(data_directory)
+        self.data_directory = Path(data_directory)  # type: ignore
         self._datafile_extensions = [".json"]
         self._version = 0.2
         self.serializer = Serializer()
 
+        assert data_directory is not None
         self._header_css = '<style type="text/css">\n  body { font-family: Verdana, Geneva, sans-serif; }\n</style>\n'
         if self.check_quantum_dataset_installation(data_directory) is None:
             install_quantum_dataset(location=data_directory, version=str(self._version))
