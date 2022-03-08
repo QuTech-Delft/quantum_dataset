@@ -5,7 +5,10 @@ import tempfile
 import unittest
 from typing import List
 
+import numpy as np
+
 from quantumdataset import QuantumDataset
+from quantumdataset.externals.serialization import Serializer
 
 
 class TestQuantumDataset(unittest.TestCase):
@@ -42,6 +45,11 @@ class TestQuantumDataset(unittest.TestCase):
         self.assertIsInstance(m, list)
 
         self.assertIsInstance(m[0].tag, str)
+
+    def test_Serializer(self):
+        s = Serializer()
+        e = s.encode_data({"1": 1, "a": np.array([1, 2])})
+        self.assertIsInstance(e, dict)
 
 
 if __name__ == "__main__":
