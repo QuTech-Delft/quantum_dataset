@@ -1,6 +1,6 @@
 import re
 
-from setuptools import setup
+from setuptools import find_packages, setup
 
 
 def readme():
@@ -19,6 +19,8 @@ def get_version(verbose=1, filename="quantumdataset/version.py"):
         print("get_version: %s" % version)
     return version
 
+
+print(find_packages())
 
 setup(
     name="quantum_dataset",
@@ -42,7 +44,7 @@ setup(
         "Topic :: Scientific/Engineering",
     ],
     license="MIT",
-    packages=["quantumdataset"],
+    packages=find_packages(),
     install_requires=["numpy", "xarray", "matplotlib", "MarkupPy", "dataclasses", "dataclasses_json"],
     tests_require=["pytest"],
     zip_safe=False,
