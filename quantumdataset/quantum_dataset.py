@@ -10,6 +10,7 @@ import distutils.version
 import json
 import logging
 import os
+import tempfile
 import uuid
 from io import BytesIO
 from pathlib import Path
@@ -73,14 +74,23 @@ class Metadata:
     extra: dict = field(default_factory=dict)
 
 
+QUANTUM_DATASET_LOCATION = "QUANTUM_DATASET_LOCATION"
+
+
 class QuantumDataset:
-    def __init__(self, data_directory: str):
+    def __init__(self, data_directory: Optional[str]):
         """Create object to load and store quantum datasets
 
         Args:
-            data_directory: directory with stored results
+            data_directory: directory with stored results. If None, then retrieve location from environment variable QUANTUM_DATASET_LOCATION
 
         """
+        if data_directory is None:
+            data_directory = os.environ.get(QUANTUM_DATASET_LOCATION, None)
+        if data_directory is None:
+            data_direcory = tempfile.mkdtemp()
+            print(f"using temporary folder {data_directory}")
+
         self.data_directory = Path(data_directory)
         self._datafile_extensions = [".json"]
         self._version = 0.2
