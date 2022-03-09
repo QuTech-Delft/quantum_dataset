@@ -65,12 +65,16 @@ def install_quantum_dataset(location: str, version: str, overwrite: bool = False
             zfile.extractall(location)
 
 
+def gen_uid() -> str:
+    return str(uuid.uuid4())
+
+
 @dataclass_json
 @dataclass
 class Metadata:
     tag: str
     name: str
-    uid: str
+    uid: str = field(default_factory=gen_uid())
     extra: dict = field(default_factory=dict)
 
 
@@ -432,8 +436,8 @@ if __name__ == "__main__":
             ds.attrs.pop("metadata", None)
             # m = q.load_dataset(*d, output_format='dict')
 
-            # uid = gen_uid()
-            uid = str(uuid.uuid4())
+            uid = gen_uid()
+
             name = d[1].replace("\\", "_")
             m = Metadata(**{"tag": d[0], "name": name, "extra": {}, "uid": uid})
             # ds.attrs['tuid']=m.uid
