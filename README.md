@@ -18,4 +18,4 @@ quantum_dataset.plot_dataset(dataset)
 quantum_dataset.generate_overview_page(quantum_dataset.data_directory / 'overview')
 ```
 
-[](docs/anti_crossing.png)
+![](docs/anti_crossing.png)
