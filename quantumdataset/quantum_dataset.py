@@ -14,7 +14,7 @@ import tempfile
 import uuid
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from urllib.request import urlopen
 from zipfile import ZipFile
 
@@ -74,8 +74,8 @@ def gen_uid() -> str:
 class Metadata:
     tag: str
     name: str
-    uid: str = field(default_factory=gen_uid())
-    extra: dict = field(default_factory=dict)
+    uid: str = field(default_factory=gen_uid)
+    extra: Dict[str, Any] = field(default_factory=dict)
 
 
 QUANTUM_DATASET_LOCATION = "QUANTUM_DATASET_LOCATION"
