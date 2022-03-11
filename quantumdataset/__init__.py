@@ -1,1 +1,1 @@
-from .quantum_dataset import QuantumDataset, install_quantum_dataset
+from .quantum_dataset import Metadata, QuantumDataset, install_quantum_dataset
