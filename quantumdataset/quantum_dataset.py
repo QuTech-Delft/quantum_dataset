@@ -350,11 +350,11 @@ class QuantumDataset:
         assert len(data) == 1
         return data[0]
 
-    def load_dataset(self, tag: str | None = None, subtag: str | int = None) -> xr.Dataset:
+    def load_dataset(self, tag: str | None = None, subtag: str | int | None = None) -> xr.Dataset:
         """Load a dataset from the database"""
         if isinstance(subtag, int) and isinstance(tag, str):
             subtag = self.list_subtags(tag)[subtag]
-        assert isinstance(subtag, str)
+            assert isinstance(subtag, str)
 
         meta = self.get_metadata(tag=tag, subtag=subtag)
         filename = self._generate_dataset_filename(meta)
@@ -481,7 +481,6 @@ if 0:
     d = (meta.tag, meta.name)
     # m = q2.load_dataset(meta.tag, meta.name)
     m = q.load_dataset(*d)
-
 
     # %%
     m2 = m.coarsen({"time": 4}).mean()
