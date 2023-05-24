@@ -7,3 +7,12 @@ line-length = 120
 
 [pycodestyle]
 max_line_length = 120
+
+[tool.ruff]
+select = ["E", "F", "UP"]
+ignore = [ "UP035", # Import block is un-sorted or un-formatted, SW teams prefers custom sorting
+           "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`, ignore for performance
+           "E741"# Ambiguous variable name: `I`; we use I and Q channels often
+        ]
+line-length = 120
+target-version = "py310"

@@ -14,15 +14,17 @@ import tempfile
 import uuid
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable
 from urllib.request import urlopen
 from zipfile import ZipFile
 
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_svg import FigureCanvasSVG
+from matplotlib.figure import Figure
 import numpy as np
 import xarray as xr
-from MarkupPy import markup
-from MarkupPy.markup import oneliner as oneliner
+from quantumdataset.externals.markup import oneliner
+from quantumdataset.externals import markup
 
 try:
     import qcodes
@@ -31,8 +33,6 @@ except ImportError:
 from dataclasses import dataclass, field
 
 from dataclasses_json import dataclass_json
-from matplotlib.backends.backend_svg import FigureCanvasSVG
-from matplotlib.figure import Figure
 
 from quantumdataset.externals.serialization import Serializer
 from quantumdataset.xarray_utils import plot_xarray_dataset
@@ -48,12 +48,11 @@ def print_dataset_non_gui(dataset: xr.Dataset, filename: str):
     return figure
 
 
-#%%
+# %%
 def install_quantum_dataset(location: str, version: str, overwrite: bool = False):
     """Install data on the specified location"""
     qdfile = os.path.join(location, "quantumdataset.txt")
     if os.path.exists(qdfile) and not overwrite:
-
         raise Exception(f"file {qdfile} exists, not overwriting dataset")
 
     zipurl = f"https://github.com/QuTech-Delft/quantum_dataset/releases/download/Test/QuantumDataset-{version}.zip"
@@ -75,14 +74,14 @@ class Metadata:
     tag: str
     name: str
     uid: str = field(default_factory=gen_uid)
-    extra: Dict[str, Any] = field(default_factory=dict)
+    extra: dict[str, Any] = field(default_factory=dict)
 
 
 QUANTUM_DATASET_LOCATION = "QUANTUM_DATASET_LOCATION"
 
 
 class QuantumDataset:
-    def __init__(self, data_directory: Optional[str]):
+    def __init__(self, data_directory: str | None):
         """Create object to load and store quantum datasets
 
         Args:
@@ -107,13 +106,13 @@ class QuantumDataset:
             if self.check_quantum_dataset_installation(location=data_directory) is None:
                 raise Exception(f"failed to install dataset at {data_directory}")
 
-    def database_metadata(self) -> List[Metadata]:
+    def database_metadata(self) -> list[Metadata]:
         """Return database metadata structure"""
         self._metadata = self.load_database_metadata()
         return self._metadata
 
     @staticmethod
-    def check_quantum_dataset_installation(location: str) -> Optional[str]:
+    def check_quantum_dataset_installation(location: str) -> str | None:
         """Return version of the Quantum DataSet installed
 
         Returns None if no data is installed
@@ -141,7 +140,7 @@ class QuantumDataset:
             ll = self.list_subtags(tag)
             print("tag %s: %d results" % (tag, len(ll)))
 
-    def list_subtags(self, tag: str) -> List[str]:
+    def list_subtags(self, tag: str) -> list[str]:
         """List all subtags for the specified tag"""
         return sorted({m.name for m in self.database_metadata() if m.tag == tag})
 
@@ -150,7 +149,7 @@ class QuantumDataset:
         dataset = self.convert_dataset_to_xarray(dataset)
         plot_xarray_dataset(dataset, fig=fig)
 
-    def show(self, tag: str, fig: Union[int, plt.Figure]):
+    def show(self, tag: str, fig: int | plt.Figure):
         """Show all datasets for a specific tag"""
 
         names = self.list_subtags(tag)
@@ -181,9 +180,9 @@ class QuantumDataset:
     def generate_results_page(
         self,
         tag: str,
-        htmldir: Union[Path, str],
-        filename: Union[Path, str],
-        plot_function: Optional[Callable] = None,
+        htmldir: Path | str,
+        filename: Path | str,
+        plot_function: Callable | None = None,
         verbose: int = 1,
     ):
         """Generate a result page for a particular tag"""
@@ -255,12 +254,12 @@ class QuantumDataset:
             page.img(src=imagefile0)
 
         if filename is not None:
-            with open(filename, "wt") as fid:
+            with open(filename, "w") as fid:
                 fid.write(str(page))
 
         return page
 
-    def generate_overview_page(self, htmldir: str, plot_functions: Optional[dict] = None) -> str:
+    def generate_overview_page(self, htmldir: str, plot_functions: dict | None = None) -> str:
         """Generate HTML page with overview of data in the database"""
         htmlpath = Path(htmldir)
         if plot_functions is None:
@@ -274,7 +273,7 @@ class QuantumDataset:
         filename, page = self._generate_main_page(htmldir)
         return filename
 
-    def _generate_main_page(self, htmldir: str) -> Tuple[str, markup.page]:
+    def _generate_main_page(self, htmldir: str) -> tuple[str, markup.page]:
         """Generate overview page with results"""
 
         page = markup.page()
@@ -309,12 +308,12 @@ class QuantumDataset:
 
         if htmldir is not None:
             filename = os.path.join(htmldir, "index.html")
-            with (open(filename, "wt")) as fid:
+            with open(filename, "w") as fid:
                 fid.write(str(page))
 
         return filename, page
 
-    def convert_dataset_to_xarray(self, dataset: Union[xr.Dataset, dict]) -> xr.Dataset:
+    def convert_dataset_to_xarray(self, dataset: xr.Dataset | dict) -> xr.Dataset:
         """Convert dataset to internal dictionary format"""
         if isinstance(dataset, xr.Dataset):
             return dataset
@@ -336,12 +335,11 @@ class QuantumDataset:
         assert isinstance(dataset, xr.Dataset)
         return dataset
 
-    def convert_dataset_to_dictionary(self, dataset: Union[xr.Dataset, dict]) -> dict:
+    def convert_dataset_to_dictionary(self, dataset: xr.Dataset | dict) -> dict:
         """Convert dataset to internal dictionary format"""
         return self.convert_dataset_to_xarray(dataset).to_dict()
 
     def get_metadata(self, *, uid=None, tag=None, subtag=None) -> Metadata:
-
         metadata = self.database_metadata()
         if uid is not None:
             uids = [m.uid for m in metadata]
@@ -352,11 +350,11 @@ class QuantumDataset:
         assert len(data) == 1
         return data[0]
 
-    def load_dataset(self, tag: Optional[str] = None, subtag: Union[str, int] = None) -> xr.Dataset:
+    def load_dataset(self, tag: str | None = None, subtag: str | int | None = None) -> xr.Dataset:
         """Load a dataset from the database"""
         if isinstance(subtag, int) and isinstance(tag, str):
             subtag = self.list_subtags(tag)[subtag]
-        assert isinstance(subtag, str)
+            assert isinstance(subtag, str)
 
         meta = self.get_metadata(tag=tag, subtag=subtag)
         filename = self._generate_dataset_filename(meta)
@@ -383,7 +381,7 @@ class QuantumDataset:
 
         encoded_data = self.serializer.encode_data(dataset_dictionary)
 
-        with open(filename, "wt") as fid:
+        with open(filename, "w") as fid:
             json.dump(encoded_data, fid)
 
         mm = self.database_metadata()
@@ -391,24 +389,23 @@ class QuantumDataset:
         self.save_database_metadata(mm)
         return filename
 
-    def list_tags(self) -> List[str]:
+    def list_tags(self) -> list[str]:
         """List all the tags currently in the database"""
         return sorted({m.tag for m in self.database_metadata()})
 
-    def load_database_metadata(self) -> List[Metadata]:
+    def load_database_metadata(self) -> list[Metadata]:
         with open(self.data_directory / "metadata.json") as fid:
             metadata = json.load(fid)
             return [Metadata.from_dict(m) for m in metadata]  # type: ignore
 
-    def save_database_metadata(self, metadata: List[Metadata]):
-        with open(self.data_directory / "metadata.json", "wt") as fid:
+    def save_database_metadata(self, metadata: list[Metadata]):
+        with open(self.data_directory / "metadata.json", "w") as fid:
             json.dump([m.to_dict() for m in metadata], fid)  # type: ignore
 
 
 if __name__ == "__main__":
     import xarray as xr
     from qtt.utilities.tools import measure_time
-    from sqt.utils.profiling import profile_expression
 
     from quantumdataset import QuantumDataset
 
@@ -462,7 +459,6 @@ if __name__ == "__main__":
     rprint(q2.database_metadata()[:3])
 
     if 1:
-
         tag = q2.list_tags()[0]
 
         q2.show(tag, fig=2)
@@ -476,7 +472,7 @@ if __name__ == "__main__":
 
         webbrowser.open(filename)
 
-#%% Resample a dataset
+# %% Resample a dataset
 if 0:
     d = ("elzerman_detuning_scan", "2019-09-07_21-58-05_qtt_vstack.json")
     # d=data[9]
@@ -486,16 +482,14 @@ if 0:
     # m = q2.load_dataset(meta.tag, meta.name)
     m = q.load_dataset(*d)
 
-    from qtt.dataset_processing import resample_dataset
-
-    #%%
+    # %%
     m2 = m.coarsen({"time": 4}).mean()
     # m2=resample_dataset(m, (2,))
     m2
     # q.save_dataset(m2, *d, overwrite=True)
     # q2.save_dataset(m2, meta, overwrite=True)
 
-    #%%
+    # %%
     from sqt.utils.plotting import plot_dataset
 
     plot_dataset(m2, fig=1)

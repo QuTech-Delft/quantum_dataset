@@ -1,28 +1,24 @@
 language: python
 matrix:
   include:
-  - name: Python 3.8
-    python: 3.8
+  - name: Python 3.10
+    python: "3.10"
     sudo: true
-    dist: xenial
+    dist: focal
     env: QT_QPA_PLATFORM=offscreen
     services:
     - xvfb
 
 install:
-    - pip install coveralls mypy
     - pip install --upgrade pip
-    #- pip install PyQt5
-    - pip install git+https://git@github.com/QuTech-Delft/qtt.git@dev
+    - pip install qtt jupyter coveralls mypy
     - pip install -e .
-    - pip install jupyter
     - export QT_QPA_PLATFORM=offscreen
 
 script:
     - ls
     - pytest --version
     - xvfb-run -a coverage run --source="./quantumdataset" -m pytest
-    - mypy quantumdataset --ignore-missing-imports
     - xvfb-run -a jupyter nbconvert --to notebook --execute "docs/example_quantum_dataset.ipynb"
 
 after_success:
